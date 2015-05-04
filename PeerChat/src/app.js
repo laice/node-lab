@@ -49,68 +49,65 @@ PeerChat.join = function(id, sharelist){
 
         peer.conn.on('open', function(){
             PeerChat.log('Connection open to peer');
-        });
-
-        peer.conn.on('data', function(data){
-            PeerChat.log('Data received from peer');
-            switch(data.type){
-                case "public_hello":
-                    peer.name = data.name;
-                    for(var i = 0, len = data.data.length; i < len; i++){
-                        var matches = 0;
-                        for(var j = 0, len2 = PeerChat.public_peers.length; j < len2; j++) {
-                            if (PeerChat.public_peers[j].conn.peer === data.data[i]) {
-                                matches++;
+            peer.conn.on('data', function(data){
+                PeerChat.log('Data received from peer');
+                switch(data.type){
+                    case "public_hello":
+                        peer.name = data.name;
+                        for(var i = 0, len = data.data.length; i < len; i++){
+                            var matches = 0;
+                            for(var j = 0, len2 = PeerChat.public_peers.length; j < len2; j++) {
+                                if (PeerChat.public_peers[j].conn.peer === data.data[i]) {
+                                    matches++;
+                                }
+                            }
+                            if(matches === 0){
+                                PeerChat.log('Adding Peer ' + data.data[i]);
+                                PeerChat.join(data.data[i], true);
+                            } else {
+                                PeerChat.log(data.data[i] + ' already a peer, skipping..')
                             }
                         }
-                        if(matches === 0){
-                            PeerChat.log('Adding Peer ' + data.data[i]);
-                            PeerChat.join(data.data[i], true);
-                        } else {
-                            PeerChat.log(data.data[i] + ' already a peer, skipping..')
+                        break;
+                    case "private_hello":
+                        peer.name = data.data;
+                        break;
+                    case "msg":
+                        PeerChat.msg.display(data);
+                        break;
+                    case "name_request":
+                        peer.conn.send({type: "name_response", data: PeerChat.name});
+                        break;
+                    case "name_response":
+                        PeerChat.pending_peer(peer.conn, data);
+                        break;
+                    case "request_peerlist":
+                        if(PeerChat.is_public(peer.conn.peer)){
+                            peer.conn.send({
+                                name: PeerChat.name,
+                                type: "public_hello",
+                                data: PeerChat.public_peers
+                            });
                         }
-                    }
-                    break;
-                case "private_hello":
-                    peer.name = data.data;
-                    break;
-                case "msg":
-                    PeerChat.msg.display(data);
-                    break;
-                case "name_request":
-                    peer.conn.send({type: "name_response", data: PeerChat.name});
-                    break;
-                case "name_response":
-                    PeerChat.pending_peer(peer.conn, data);
-                    break;
-                case "request_peerlist":
-                    if(PeerChat.is_public(peer.conn.peer)){
-                        peer.conn.send({
-                            name: PeerChat.name,
-                            type: "public_hello",
-                            data: PeerChat.public_peers
-                        });
-                    }
-                    break;
+                        break;
 
-            }
-        });
-
-        peer.conn.on('close', function(){
-            for(var i = this.public_peers.length-1; i >= 0; i++){
-                if(this.public_peers[i].id === peer.conn.peer){
-                    this.public_peers[i].splice(i, 1);
                 }
-            }
-            for(var i = this.private_peers.length-1; i >= 0; i++){
-                if(this.private_peers[i].id === peer.conn.peer){
-                    this.private_peers[i].splice(i, 1);
+            });
+
+            peer.conn.on('close', function(){
+                for(var i = this.public_peers.length-1; i >= 0; i++){
+                    if(this.public_peers[i].id === peer.conn.peer){
+                        this.public_peers[i].splice(i, 1);
+                    }
                 }
-            }
-            this.make_peerlist();
+                for(var i = this.private_peers.length-1; i >= 0; i++){
+                    if(this.private_peers[i].id === peer.conn.peer){
+                        this.private_peers[i].splice(i, 1);
+                    }
+                }
+                this.make_peerlist();
+            });
         });
-
-
 };
 
 PeerChat.is_public = function(id){
