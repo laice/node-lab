@@ -15,6 +15,13 @@ PeerChat.init = function(username){
     this.private_peers = [];
     this.public_peers = [];
     this.peer = new Peer({key: "tfqi5mkneo9cz0k9"});
+
+    this.peer.on('open', function(id){
+        console.log('connection open, i am ' + id);
+        this.id = id;
+        $('#peerid').empty().text(id);
+    });
+
     return this.peer;
 };
 PeerChat.join = function(id, sharelist){
@@ -29,11 +36,11 @@ PeerChat.join = function(id, sharelist){
             this.private_peers.push(peer);
         }
         peer.conn.on('open', function(){
-            PeerChat.log('Connection open to peer')
+            PeerChat.log('Connection open to peer');
         });
 
         peer.conn.on('data', function(data){
-            PeerChat.log('Data received from peer')
+            PeerChat.log('Data received from peer');
             switch(data.type){
                 case "public_hello":
                     peer.name = data.thisname;
@@ -54,6 +61,9 @@ PeerChat.join = function(id, sharelist){
                     break;
                 case "private_hello":
                     peer.name = data.thisname;
+                    break;
+                case "msg":
+                    PeerChat.msg.display(data);
                     break;
             }
         });
@@ -104,6 +114,8 @@ PeerChat.log.update = function(divs) {
     }
 };
 
+
+
 PeerChat.msg = function(msg){
     PeerChat.msg.broadcastPublic(msg);
     PeerChat.msg.broadcastPrivate(msg);
@@ -135,5 +147,10 @@ PeerChat.msg.broadcastPrivate = function(msg){
             from: PeerChat.name
         });
     }
+};
+
+PeerChat.msg.display = function(msg_data){
+    PeerChat.messages.push(msg_data);
+    $('#chat-output-text').append(msg_data.from + ": " + msg_data.data);
 };
 

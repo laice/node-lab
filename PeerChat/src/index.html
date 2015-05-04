@@ -14,13 +14,13 @@
     <div id="errors"></div>
 </div>
 <div id="user-form">
-    <form>
+
         <label for="userid">User Name (optional)</label>
         <input type="text" id="userid" placeholder="Name" />
         <button id="okuser">Ok</button>
-    </form>
+
 </div>
-<div id="join-form">
+<div id="join-form" hidden>
     <form>
         <label for="join-form-input">Host ID: </label>
         <input type="text" id="join-form-input" />
@@ -29,7 +29,10 @@
         <button id="join-form-button">Connect</button>
     </form>
 </div>
-<div id="chat">
+<div id="my-info" hidden>
+    <label for="peerid">Share this to allow people to connect to you: </label>
+    <div id="peerid"></div></div>
+<div id="chat" hidden>
     <div id="chat-output">
         <textarea id="chat-output-text" readonly rows="6" cols="64"></textarea>
     </div>
@@ -51,15 +54,19 @@
         var results = $('#userid').val().trim().match(regex);
         if(results[0] !== '' ) {
             console.log('valid username: ' + results[0]);
-            PeerChat.username = results[0];
+            PeerChat.init(results[0]);
             $('#user-form').hide();
+            $('#chat').show();
+            $('#my-info').show();
+            $('#join-form').show();
         } else {
             console.log('invalid username: ' + results);
         }
+
     });
 
     $('#join-form-button').click(function(){
-
+        PeerChat.join($('#join-form-input').val().trim(), $('#join-privacy-input').is(':checked'));
     });
 </script>
 </html>
