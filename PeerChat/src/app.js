@@ -31,12 +31,75 @@ PeerChat.init = function(username){
     });
 
     this.peer.on('connection', function(conn){
-        conn.send({
-            type: 'name_request'
-        });
+        console.log('connection from peer received, sending name request');
+
+        conn.on('data', function(data){
+            PeerChat.handle_data(null, conn, data);
+        })
     });
 
     return this.peer;
+};
+
+// "server" actions use conn "client" actions use peer
+PeerChat.handle_data = function(peer, conn, data){
+    switch(data.type){
+        case "public_hello":
+            console.log('public hello received');
+            peer.name = data.name;
+            for(var i = 0, len = data.data.length; i < len; i++){
+                var matches = 0;
+                for(var j = 0, len2 = PeerChat.public_peers.length; j < len2; j++) {
+                    if (PeerChat.public_peers[j].conn.peer === data.data[i]) {
+                        matches++;
+                    }
+                }
+                if(matches === 0){
+                    PeerChat.log('Adding Peer ' + data.data[i]);
+                    PeerChat.join(data.data[i], true);
+                } else {
+                    PeerChat.log(data.data[i] + ' already a peer, skipping..')
+                }
+            }
+            PeerChat.public_peers.push(peer);
+            PeerChat.make_peerlist();
+            break;
+        case "private_hello":
+            console.log('private hello received');
+            peer.name = data.data;
+            PeerChat.private_peers.push(peer);
+            PeerChat.make_peerlist();
+            break;
+        case "msg":
+            console.log('msg received');
+            PeerChat.msg.display(data);
+            break;
+        case "name_request":
+            console.log('name request received');
+            peer.conn.send({type: "name_response", data: PeerChat.name});
+            break;
+        case "name_response":
+            console.log('name response received');
+            PeerChat.pending_peer(conn, data);
+            break;
+        case "request_peerlist":
+            console.log('peerlist request received');
+            if(PeerChat.is_public(peer.conn.peer)){
+                peer.conn.send({
+                    name: PeerChat.name,
+                    type: "public_hello",
+                    data: PeerChat.public_peers
+                });
+            }
+            break;
+        case "initiate":
+            console.log('initiating');
+            conn.send({
+                type: 'name_request'
+            });
+            break;
+
+    }
 };
 PeerChat.join = function(id, sharelist){
 
@@ -49,52 +112,14 @@ PeerChat.join = function(id, sharelist){
 
         peer.conn.on('open', function(){
             PeerChat.log('Connection open to peer');
+            peer.conn.send({type:"initiate"});
             peer.conn.on('data', function(data){
                 PeerChat.log('Data received from peer');
-                switch(data.type){
-                    case "public_hello":
-                        peer.name = data.name;
-                        for(var i = 0, len = data.data.length; i < len; i++){
-                            var matches = 0;
-                            for(var j = 0, len2 = PeerChat.public_peers.length; j < len2; j++) {
-                                if (PeerChat.public_peers[j].conn.peer === data.data[i]) {
-                                    matches++;
-                                }
-                            }
-                            if(matches === 0){
-                                PeerChat.log('Adding Peer ' + data.data[i]);
-                                PeerChat.join(data.data[i], true);
-                            } else {
-                                PeerChat.log(data.data[i] + ' already a peer, skipping..')
-                            }
-                        }
-                        break;
-                    case "private_hello":
-                        peer.name = data.data;
-                        break;
-                    case "msg":
-                        PeerChat.msg.display(data);
-                        break;
-                    case "name_request":
-                        peer.conn.send({type: "name_response", data: PeerChat.name});
-                        break;
-                    case "name_response":
-                        PeerChat.pending_peer(peer.conn, data);
-                        break;
-                    case "request_peerlist":
-                        if(PeerChat.is_public(peer.conn.peer)){
-                            peer.conn.send({
-                                name: PeerChat.name,
-                                type: "public_hello",
-                                data: PeerChat.public_peers
-                            });
-                        }
-                        break;
-
-                }
+                PeerChat.handle_data(peer, null, data);
             });
 
             peer.conn.on('close', function(){
+                console.log('connection closed with ' + peer.conn.peer);
                 for(var i = this.public_peers.length-1; i >= 0; i++){
                     if(this.public_peers[i].id === peer.conn.peer){
                         this.public_peers[i].splice(i, 1);
