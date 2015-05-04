@@ -5,8 +5,14 @@
     <title></title>
     <script src="http://cdn.peerjs.com/0.3.9/peer.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
-    <script src="../../common/src/ifp-utils/utils.js"></script>
+    <!-- nwjs
+    <script src="../../common/src/ifp-utils/utils.js" type="application/javascript"></script>
+    <script src="app.js" type="application/javascript"></script>
+    -->
+    <!-- node -->
+    <script src="utils.js"></script>
     <script src="app.js"></script>
+
 </head>
 <body>
 <div id="console">
@@ -21,34 +27,46 @@
 
 </div>
 <div id="join-form" hidden>
-    <form>
-        <label for="join-form-input">Host ID: </label>
-        <input type="text" id="join-form-input" />
-        <lable for="join-privacy-input">Share host peerlist? </lable>
-        <input type="checkbox" checked value="privacy" id="join-privacy-input">
-        <button id="join-form-button">Connect</button>
-    </form>
+
+    <label for="join-form-input">Host ID: </label>
+    <input type="text" id="join-form-input" />
+    <lable for="join-privacy-input">Share host peerlist? </lable>
+    <input type="checkbox" checked value="privacy" id="join-privacy-input">
+    <button id="join-form-button">Connect</button>
+
 </div>
 <div id="my-info" hidden>
     <label for="peerid">Share this to allow people to connect to you: </label>
     <div id="peerid"></div></div>
 <div id="chat" hidden>
     <div id="chat-output">
-        <textarea id="chat-output-text" readonly rows="6" cols="64"></textarea>
+        <textarea id="chat-output-text" readonly rows="6" cols="64" style="resize: none;"></textarea>
+        <select id="peerlist" size="6"></select>
     </div>
     <div id="chat-input">
-        <form>
-            <input type="text" id="chat-input-text">
-            <label for="chat-input-text">
-                <button id="send-chat">Send</button>
-            </label>
-        </form>
+
+        <input type="text" id="chat-input-text">
+        <label for="chat-input-text">
+            <button id="send-chat">All</button>
+            <button id="send-chat-public">Public</button>
+            <button id="send-chat-private">Private</button>
+            <button id="send-chat-target">Selected</button>
+        </label>
+
     </div>
-    <div id="peerlist"></div>
+
+    <div id="pending_peers_div">
+        <select id="pending_peers" size="6"></select>
+        <button id="allow-public">Allow Public</button>
+        <button id="allow-private">Allow Private</button>
+        <button id="pending-deny">Deny</button>
+
+    </div>
 </div>
 
 </body>
 <script>
+
     $('#okuser').click(function(){
         var regex = /([a-zA-Z0-9]+)/g;
         var results = $('#userid').val().trim().match(regex);
@@ -68,5 +86,43 @@
     $('#join-form-button').click(function(){
         PeerChat.join($('#join-form-input').val().trim(), $('#join-privacy-input').is(':checked'));
     });
+    //console.log(process.versions);
+    $('#allow-public').click(function(){
+        var name = $("#pending_peers option:selected").text();
+        PeerChat.public_hello(name);
+    });
+
+    $('#allow-private').click(function(){
+        var name = $("#pending_peers option:selected").text();
+        PeerChat.private_hello(name);
+    });
+
+    $('#pending-deny').click(function(){
+        var name = $('#pending_peers option:selected').text();
+        for(var i = PeerChat.pending_peers.length; i >= 0; i--){
+            if(PeerChat.pending_peers[i].name === name){
+                PeerChat.pending_peers.splice(i, 1);
+            }
+        }
+
+    });
+
+    $('#send-chat').click(function(){
+        PeerChat.msg($('#chat-input-text').text());
+        $('#chat-input-text').empty();
+    });
+
+    $('#send-chat-public').click(function(){
+        PeerChat.msg.broadcastPublic($('#chat-input-text').text());
+        $('#chat-input-text').empty();
+    });
+    $('#send-chat-private').click(function(){
+        PeerChat.msg.broadcastPrivate($('#chat-input-text').text());
+        $('#chat-input-text').empty();
+    })
+    $('#send-chat-target').click(function(){
+        PeerChat.msg.private($('#chat-input-text').text(), $('#peerlist option:selected').text());
+        $('#chat-input-text').empty();
+    })
 </script>
 </html>
