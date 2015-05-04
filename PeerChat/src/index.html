@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <script src="http://cdn.peerjs.com/0.3.9/peer.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+    <script src="../../common/src/ifp-utils/utils.js"></script>
+    <script src="app.js"></script>
+</head>
+<body>
+<div id="console">
+    <div id="logs"></div>
+    <div id="errors"></div>
+</div>
+<div id="user-form">
+    <form>
+        <label for="userid">User Name (optional)</label>
+        <input type="text" id="userid" placeholder="Name" />
+        <button id="okuser">Ok</button>
+    </form>
+</div>
+<div id="join-form">
+    <form>
+        <label for="join-form-input">Host ID: </label>
+        <input type="text" id="join-form-input" />
+        <lable for="join-privacy-input">Share host peerlist? </lable>
+        <input type="checkbox" checked value="privacy" id="join-privacy-input">
+        <button id="join-form-button">Connect</button>
+    </form>
+</div>
+<div id="chat">
+    <div id="chat-output">
+        <textarea id="chat-output-text" readonly rows="6" cols="64"></textarea>
+    </div>
+    <div id="chat-input">
+        <form>
+            <input type="text" id="chat-input-text">
+            <label for="chat-input-text">
+                <button id="send-chat">Send</button>
+            </label>
+        </form>
+    </div>
+    <div id="peerlist"></div>
+</div>
+
+</body>
+<script>
+    $('#okuser').click(function(){
+        var regex = /([a-zA-Z0-9]+)/g;
+        var results = $('#userid').val().trim().match(regex);
+        if(results[0] !== '' ) {
+            console.log('valid username: ' + results[0]);
+            PeerChat.username = results[0];
+            $('#user-form').hide();
+        } else {
+            console.log('invalid username: ' + results);
+        }
+    });
+
+    $('#join-form-button').click(function(){
+
+    });
+</script>
+</html>
