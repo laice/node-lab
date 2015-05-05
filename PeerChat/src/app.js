@@ -34,7 +34,7 @@ PeerChat.init = function(username){
         console.log('connection from peer received, sending name request');
 
         conn.on('data', function(data){
-            PeerChat.handle_data(null, conn, data);
+            PeerChat.handle_data_conn(conn, data);
         })
     });
 
@@ -42,7 +42,7 @@ PeerChat.init = function(username){
 };
 
 // "server" actions use conn "client" actions use peer
-PeerChat.handle_data = function(peer, conn, data){
+PeerChat.handle_data_peer = function(peer, data){
     switch(data.type){
         case "public_hello":
             console.log('public hello received');
@@ -75,13 +75,10 @@ PeerChat.handle_data = function(peer, conn, data){
             PeerChat.msg.display(data);
             break;
         case "name_request":
-            console.log('name request received');
+            console.log('name request received', data);
             peer.conn.send({type: "name_response", data: PeerChat.name});
             break;
-        case "name_response":
-            console.log('name response received');
-            PeerChat.pending_peer(conn, data);
-            break;
+
         case "request_peerlist":
             console.log('peerlist request received');
             if(PeerChat.is_public(peer.conn.peer)){
@@ -92,15 +89,30 @@ PeerChat.handle_data = function(peer, conn, data){
                 });
             }
             break;
+
+
+    }
+};
+
+PeerChat.handle_data_conn = function(conn, data){
+    switch(data.type){
         case "initiate":
             console.log('initiating');
             conn.send({
                 type: 'name_request'
             });
             break;
-
+        case "name_response":
+            console.log('name response received');
+            PeerChat.pending_peer(conn, data);
+            break;
+        case "msg":
+            console.log('msg received', data);
+            PeerChat.msg.display(data);
+            break;
     }
-};
+
+}
 PeerChat.join = function(id, sharelist){
 
         var peer = {
@@ -115,7 +127,7 @@ PeerChat.join = function(id, sharelist){
             peer.conn.send({type:"initiate"});
             peer.conn.on('data', function(data){
                 PeerChat.log('Data received from peer');
-                PeerChat.handle_data(peer, null, data);
+                PeerChat.handle_data_peer(peer, data);
             });
 
             peer.conn.on('close', function(){
@@ -203,6 +215,7 @@ PeerChat.private_hello = function(name){
 
 PeerChat.make_peerlist = function(){
     $('#peerlist').empty();
+    $('#peerlist').append("<option id='self'>"+PeerChat.name);
     for(var i = 0, len = this.public_peers.length; i < len; i++){
         $('#peerlist').append("<option id='public_peer'>"+this.public_peers[i].name);
     }
@@ -266,8 +279,9 @@ PeerChat.log.update = function(divs) {
 
 
 PeerChat.msg = function(msg){
-    PeerChat.msg.broadcastPublic(msg);
-    PeerChat.msg.broadcastPrivate(msg);
+    PeerChat.msg.broadcastPublic(msg, true);
+    PeerChat.msg.broadcastPrivate(msg, true);
+    PeerChat.msg.display(msg);
 };
 
 PeerChat.msg.private = function(msg, target) {
@@ -276,9 +290,10 @@ PeerChat.msg.private = function(msg, target) {
         data: msg,
         from: PeerChat.name
     });
+    PeerChat.msg.display(msg);
 };
 
-PeerChat.msg.broadcastPublic = function(msg) {
+PeerChat.msg.broadcastPublic = function(msg, no_self_msg) {
     for(var i = 0, len = PeerChat.public_peers.length; i < len; i++){
         PeerChat.public_peers[i].conn.send({
             type: "msg",
@@ -286,9 +301,13 @@ PeerChat.msg.broadcastPublic = function(msg) {
             from: PeerChat.name
         });
     }
+    if(!ifp.legit(no_self_msg)){
+        PeerChat.msg.display(msg);
+    }
+
 };
 
-PeerChat.msg.broadcastPrivate = function(msg){
+PeerChat.msg.broadcastPrivate = function(msg, no_self_msg){
     for(var i = 0, len = PeerChat.private_peers.length; i < len; i++){
         PeerChat.private_peers[i].conn.send({
             type: "msg",
@@ -296,10 +315,13 @@ PeerChat.msg.broadcastPrivate = function(msg){
             from: PeerChat.name
         });
     }
+    if(!ifp.legit(no_self_msg)){
+        PeerChat.msg.display(msg);
+    }
+
 };
 
 PeerChat.msg.display = function(msg_data){
     PeerChat.messages.push(msg_data);
     $('#chat-output-text').append(msg_data.from + ": " + msg_data.data);
 };
-

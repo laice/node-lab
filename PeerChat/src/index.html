@@ -108,20 +108,22 @@
     });
 
     $('#send-chat').click(function(){
-        PeerChat.msg($('#chat-input-text').text());
+
+
+        PeerChat.msg($('#chat-input-text').val());
         $('#chat-input-text').empty();
     });
 
     $('#send-chat-public').click(function(){
-        PeerChat.msg.broadcastPublic($('#chat-input-text').text());
+        PeerChat.msg.broadcastPublic($('#chat-input-text').val());
         $('#chat-input-text').empty();
     });
     $('#send-chat-private').click(function(){
-        PeerChat.msg.broadcastPrivate($('#chat-input-text').text());
+        PeerChat.msg.broadcastPrivate($('#chat-input-text').val());
         $('#chat-input-text').empty();
     })
     $('#send-chat-target').click(function(){
-        PeerChat.msg.private($('#chat-input-text').text(), $('#peerlist option:selected').text());
+        PeerChat.msg.private($('#chat-input-text').val(), $('#peerlist option:selected').text());
         $('#chat-input-text').empty();
     })
 </script>
