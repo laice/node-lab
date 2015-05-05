@@ -26,7 +26,7 @@ PeerChat.init = function(username){
 
     this.peer.on('open', function(id){
         console.log('connection open, i am ' + id);
-        this.id = id;
+        PeerChat.id = id;
         $('#peerid').empty().text(id);
     });
 
@@ -37,6 +37,8 @@ PeerChat.init = function(username){
             PeerChat.handle_data_conn(conn, data);
         })
     });
+
+    PeerChat.make_peerlist();
 
     return this.peer;
 };
@@ -62,13 +64,17 @@ PeerChat.handle_data_peer = function(peer, data){
                 }
             }
             PeerChat.public_peers.push(peer);
+            PeerChat.remove_pending_peer(peer);
             PeerChat.make_peerlist();
+            peer.conn.send({type: "peer_confirmed"});
             break;
         case "private_hello":
             console.log('private hello received');
             peer.name = data.data;
             PeerChat.private_peers.push(peer);
+            PeerChat.remove_pending_peer(peer);
             PeerChat.make_peerlist();
+            peer.conn.send({type: "peer_confirmed"});
             break;
         case "msg":
             console.log('msg received');
@@ -97,18 +103,22 @@ PeerChat.handle_data_peer = function(peer, data){
 PeerChat.handle_data_conn = function(conn, data){
     switch(data.type){
         case "initiate":
-            console.log('initiating');
+            PeerChat.log('initiating connection, sending name request');
             conn.send({
                 type: 'name_request'
             });
             break;
         case "name_response":
-            console.log('name response received');
+            PeerChat.log('name response received, adding pending peer for approval');
             PeerChat.pending_peer(conn, data);
             break;
         case "msg":
-            console.log('msg received', data);
+            PeerChat.log('message received');
             PeerChat.msg.display(data);
+            break;
+        case "peer_confirmed":
+            PeerChat.log('peer confirmed, removing from peerlist');
+            PeerChat.remove_pending_peer(null, conn);
             break;
     }
 
@@ -154,12 +164,39 @@ PeerChat.is_public = function(id){
         }
     }
     return false;
-}
+};
 
 PeerChat.pending_peer = function(conn, data){
+    console.log('adding pending peer');
     $('#pending_peers').append("<option>" + data.data);
     this.pending_peers.push({ conn: conn, name: data.data, id: conn.peer});
     this.make_peerlist();
+};
+
+PeerChat.remove_pending_peer = function(peer, conn) {
+    var id;
+    if(peer){
+        id = peer.id;
+    } else if (conn) {
+        id = conn.peer;
+    }
+    PeerChat.log('removing id ' + id);
+    for(var i = this.pending_peers.length-1; i >= 0; i--){
+        if(id === this.pending_peers[i].id){
+            PeerChat.log('matching pending peer id found ' + this.pending_peers[i].id);
+            this.pending_peers.splice(i, 1);
+        }
+    }
+
+    PeerChat.make_peerlist();
+};
+
+PeerChat.public_peer_ids = function(){
+    var ppids = [];
+    for(var i = 0, len = this.public_peers.length; i < len; i++){
+        ppids.push(this.public_peers[i].conn.peer);
+    }
+    return ppids;
 };
 
 PeerChat.public_hello = function(name){
@@ -174,7 +211,7 @@ PeerChat.public_hello = function(name){
         peer.conn.send({
             type: "public_hello",
             name: PeerChat.name,
-            data: PeerChat.public_peers
+            data: this.public_peer_ids()
         });
 
         if(this.auto_request_peerlist){
@@ -215,12 +252,12 @@ PeerChat.private_hello = function(name){
 
 PeerChat.make_peerlist = function(){
     $('#peerlist').empty();
-    $('#peerlist').append("<option id='self'>"+PeerChat.name);
+    $('#peerlist_public').append("<option id='self'>"+PeerChat.name);
     for(var i = 0, len = this.public_peers.length; i < len; i++){
         $('#peerlist').append("<option id='public_peer'>"+this.public_peers[i].name);
     }
     for(var i = 0, len = this.private_peers.length; i < len; i++){
-        $('#peerlist').append("<option id='private_peer'>" + this.private_peers[i].name);
+        $('#peerlist_private').append("<option id='private_peer'>" + this.private_peers[i].name);
     }
     $('#pending_peers').empty();
     for(var i = 0, len = this.pending_peers.length; i < len; i++){
@@ -234,7 +271,7 @@ PeerChat.log = function(text, type){
     } else if(ifp.legit(type)) {
         switch(type){
             case 'log':
-                this.new_logs.unshift(text + "\n");
+                this.new_logs.unshift(text + "<\n");
                 break;
             case 'error':
                 this.new_errors.unshift(text + "\n");
@@ -258,7 +295,7 @@ PeerChat.log.update = function(divs) {
     if(ifp.legit(divs.errors)){
         var errs = PeerChat.new_errors;
         for(var i = errs.length-1; i >= 0; i--) {
-            $(divs.errors).append(errs[i]);
+            $('#console_output').append("ERROR: " + errs[i] + "\n");
             PeerChat.errors.push(errs[i]);
             errs.splice(i, 1)
 
@@ -269,7 +306,7 @@ PeerChat.log.update = function(divs) {
     if(ifp.legit(divs.logs)){
         var logs = PeerChat.new_logs;
         for(var i = logs.length-1; i >=0; i--){
-            $(divs.logs).append(logs[i]);
+            $('#console_output').append(logs[i] + "\n");
             PeerChat.logs.push(logs[i]);
             logs.splice(i, 1);
         }
@@ -281,7 +318,7 @@ PeerChat.log.update = function(divs) {
 PeerChat.msg = function(msg){
     PeerChat.msg.broadcastPublic(msg, true);
     PeerChat.msg.broadcastPrivate(msg, true);
-    PeerChat.msg.display(msg);
+    PeerChat.msg.display({data: msg, from: PeerChat.name});
 };
 
 PeerChat.msg.private = function(msg, target) {
@@ -290,7 +327,7 @@ PeerChat.msg.private = function(msg, target) {
         data: msg,
         from: PeerChat.name
     });
-    PeerChat.msg.display(msg);
+    PeerChat.msg.display({data: msg, from: PeerChat.name});
 };
 
 PeerChat.msg.broadcastPublic = function(msg, no_self_msg) {
@@ -302,7 +339,7 @@ PeerChat.msg.broadcastPublic = function(msg, no_self_msg) {
         });
     }
     if(!ifp.legit(no_self_msg)){
-        PeerChat.msg.display(msg);
+        PeerChat.msg.display({data: msg, from: PeerChat.name});
     }
 
 };
@@ -316,12 +353,12 @@ PeerChat.msg.broadcastPrivate = function(msg, no_self_msg){
         });
     }
     if(!ifp.legit(no_self_msg)){
-        PeerChat.msg.display(msg);
+        PeerChat.msg.display({data: msg, from: PeerChat.name});
     }
 
 };
 
 PeerChat.msg.display = function(msg_data){
     PeerChat.messages.push(msg_data);
-    $('#chat-output-text').append(msg_data.from + ": " + msg_data.data);
+    $('#chat-output-text').append(msg_data.from + ": " + msg_data.data + "\n");
 };

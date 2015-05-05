@@ -2,7 +2,8 @@
 <html>
 <head lang="en">
     <meta charset="UTF-8">
-    <title></title>
+    <title id="page_title">PeerChat</title>
+    <link href="style.css" rel="stylesheet" type="text/css">
     <script src="http://cdn.peerjs.com/0.3.9/peer.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
     <!-- nwjs
@@ -13,11 +14,11 @@
     <script src="utils.js"></script>
     <script src="app.js"></script>
 
+
 </head>
 <body>
 <div id="console">
-    <div id="logs"></div>
-    <div id="errors"></div>
+    <textarea readonly id="console_output" rows="6" cols="64" style="resize: none"></textarea>
 </div>
 <div id="user-form">
 
@@ -41,16 +42,23 @@
 <div id="chat" hidden>
     <div id="chat-output">
         <textarea id="chat-output-text" readonly rows="6" cols="64" style="resize: none;"></textarea>
-        <select id="peerlist" size="6"></select>
+        <label for="chat-output-text">
+            <select id="peerlist_public" size="6"></select>
+            <select id="peerlist_private" size="6"></select>
+        </label>
     </div>
     <div id="chat-input">
 
         <input type="text" id="chat-input-text">
         <label for="chat-input-text">
-            <button id="send-chat">All</button>
-            <button id="send-chat-public">Public</button>
-            <button id="send-chat-private">Private</button>
-            <button id="send-chat-target">Selected</button>
+            <select id="send-chat-dest">
+                <option>All</option>
+                <option>Public</option>
+                <option>Private</option>
+                <option>Whisper</option>
+            </select>
+            <button id="send-chat">Send</button>
+
         </label>
 
     </div>
@@ -85,6 +93,7 @@
 
     $('#join-form-button').click(function(){
         PeerChat.join($('#join-form-input').val().trim(), $('#join-privacy-input').is(':checked'));
+        $('#join-form-input').val("");
     });
     //console.log(process.versions);
     $('#allow-public').click(function(){
@@ -108,23 +117,26 @@
     });
 
     $('#send-chat').click(function(){
+        var chat_dest = $('#send-chat-dest').text();
+
+        switch(chat_dest){
+            case "All":
+                PeerChat.msg($('#chat-input-text').val());
+                break;
+            case "Public":
+                PeerChat.msg.broadcastPublic($('#chat-input-text').val());
+                break;
+            case "Private":
+                PeerChat.msg.broadcastPrivate($('#chat-input-text').val());
+                break;
+            case "Whisper":
+                PeerChat.msg.private($('#chat-input-text').val(), $('#peerlist option:selected').text());
+                break;
+
+        }
+        $('#chat-input-text').val("");
 
 
-        PeerChat.msg($('#chat-input-text').val());
-        $('#chat-input-text').empty();
     });
-
-    $('#send-chat-public').click(function(){
-        PeerChat.msg.broadcastPublic($('#chat-input-text').val());
-        $('#chat-input-text').empty();
-    });
-    $('#send-chat-private').click(function(){
-        PeerChat.msg.broadcastPrivate($('#chat-input-text').val());
-        $('#chat-input-text').empty();
-    })
-    $('#send-chat-target').click(function(){
-        PeerChat.msg.private($('#chat-input-text').val(), $('#peerlist option:selected').text());
-        $('#chat-input-text').empty();
-    })
 </script>
 </html>
