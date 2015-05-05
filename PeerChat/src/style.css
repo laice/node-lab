@@ -2,3 +2,12 @@
     display:inline-block;
     vertical-align:middle;
 }
+
+#console_output {
+    border: 0px;
+    background: darkgoldenrod;
+}
+
+#chat {
+
+}

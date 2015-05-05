@@ -16,7 +16,7 @@
 
 
 </head>
-<body>
+
 <div id="console">
     <textarea readonly id="console_output" rows="6" cols="64" style="resize: none"></textarea>
 </div>
@@ -62,15 +62,15 @@
         </label>
 
     </div>
-
-    <div id="pending_peers_div">
-        <select id="pending_peers" size="6"></select>
-        <button id="allow-public">Allow Public</button>
-        <button id="allow-private">Allow Private</button>
-        <button id="pending-deny">Deny</button>
-
-    </div>
 </div>
+<div id="pending_peers_div" hidden>
+    <select id="pending_peers" size="6"></select>
+    <button id="allow-public">Allow Public</button>
+    <button id="allow-private">Allow Private</button>
+    <button id="pending-deny">Deny</button>
+
+</div>
+
 
 </body>
 <script>
@@ -85,6 +85,7 @@
             $('#chat').show();
             $('#my-info').show();
             $('#join-form').show();
+            $('#pending-peers-div').show();
         } else {
             console.log('invalid username: ' + results);
         }
@@ -117,7 +118,7 @@
     });
 
     $('#send-chat').click(function(){
-        var chat_dest = $('#send-chat-dest').text();
+        var chat_dest = $('#send-chat-dest option:selected').text();
 
         switch(chat_dest){
             case "All":

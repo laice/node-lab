@@ -35,7 +35,12 @@ PeerChat.init = function(username){
 
         conn.on('data', function(data){
             PeerChat.handle_data_conn(conn, data);
-        })
+        });
+
+        conn.on('close', function(){
+            PeerChat.remove_peer_by_id(conn.peer);
+        });
+
     });
 
     PeerChat.make_peerlist();
@@ -43,7 +48,6 @@ PeerChat.init = function(username){
     return this.peer;
 };
 
-// "server" actions use conn "client" actions use peer
 PeerChat.handle_data_peer = function(peer, data){
     switch(data.type){
         case "public_hello":
@@ -122,7 +126,7 @@ PeerChat.handle_data_conn = function(conn, data){
             break;
     }
 
-}
+};
 PeerChat.join = function(id, sharelist){
 
         var peer = {
@@ -141,20 +145,24 @@ PeerChat.join = function(id, sharelist){
             });
 
             peer.conn.on('close', function(){
-                console.log('connection closed with ' + peer.conn.peer);
-                for(var i = this.public_peers.length-1; i >= 0; i++){
-                    if(this.public_peers[i].id === peer.conn.peer){
-                        this.public_peers[i].splice(i, 1);
-                    }
-                }
-                for(var i = this.private_peers.length-1; i >= 0; i++){
-                    if(this.private_peers[i].id === peer.conn.peer){
-                        this.private_peers[i].splice(i, 1);
-                    }
-                }
-                this.make_peerlist();
+                PeerChat.remove_peer_by_id(peer.conn.peer);
             });
         });
+};
+
+PeerChat.remove_peer_by_id = function(id){
+    console.log('connection closed with ' + id);
+    for(var i = PeerChat.public_peers.length-1; i >= 0; i--){
+        if(PeerChat.public_peers[i].id === id){
+            PeerChat.public_peers.splice(i, 1);
+        }
+    }
+    for(var i = PeerChat.private_peers.length-1; i >= 0; i--){
+        if(PeerChat.private_peers[i].id === id){
+            PeerChat.private_peers.splice(i, 1);
+        }
+    }
+    this.make_peerlist();
 };
 
 PeerChat.is_public = function(id){
@@ -208,6 +216,7 @@ PeerChat.public_hello = function(name){
     }
     if(peer) {
         peer.share = true;
+        PeerChat.log('sending public hello with ids ' + this.public_peer_ids());
         peer.conn.send({
             type: "public_hello",
             name: PeerChat.name,
@@ -251,17 +260,19 @@ PeerChat.private_hello = function(name){
 };
 
 PeerChat.make_peerlist = function(){
-    $('#peerlist').empty();
-    $('#peerlist_public').append("<option id='self'>"+PeerChat.name);
+    PeerChat.log('making peerlist');
+    $('#peerlist_public').empty();
+    $('#peerlist_public').append("<option id='self'>"+PeerChat.name+"</option>");
     for(var i = 0, len = this.public_peers.length; i < len; i++){
-        $('#peerlist').append("<option id='public_peer'>"+this.public_peers[i].name);
+        $('#peerlist_public').append("<option id='public_peer'>"+this.public_peers[i].name + "</option>");
     }
+    $('#peerlist_private').empty();
     for(var i = 0, len = this.private_peers.length; i < len; i++){
-        $('#peerlist_private').append("<option id='private_peer'>" + this.private_peers[i].name);
+        $('#peerlist_private').append("<option id='private_peer'>" + this.private_peers[i].name + "</option>");
     }
     $('#pending_peers').empty();
     for(var i = 0, len = this.pending_peers.length; i < len; i++){
-        $('#pending_peers').append("<option id='pending_peer'>" + this.pending_peers[i].name);
+        $('#pending_peers').append("<option id='pending_peer'>" + this.pending_peers[i].name + "</option>");
     }
 };
 
@@ -311,6 +322,8 @@ PeerChat.log.update = function(divs) {
             logs.splice(i, 1);
         }
     }
+    var ta = document.getElementById('console_output');
+    ta.scrollTop = ta.scrollHeight;
 };
 
 
@@ -361,4 +374,6 @@ PeerChat.msg.broadcastPrivate = function(msg, no_self_msg){
 PeerChat.msg.display = function(msg_data){
     PeerChat.messages.push(msg_data);
     $('#chat-output-text').append(msg_data.from + ": " + msg_data.data + "\n");
+    var ta = document.getElementById('chat-output-text');
+    ta.scrollTop = ta.scrollHeight;
 };
