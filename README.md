@@ -8,7 +8,7 @@ This is just a basic server I use for serving apps locally during development. I
 ### PeerChat ###
 This is a proof-of-concept PeerJS based chat client which embraces p2p technology. Each peer maintains private and public peerlists. When a peer joins another peer, and they both accept public transaction, peerlists are exchanged, and the public peerlist of each peer is expanded to include each other's peers, minus duplicates - if each peer on the added lists accept the public request. This creates a chain of public joining which, when accepted by all parties, allows the entire peer network to propagate back to the initial joiner. Either the initial peer will provide all other peer references, or recursively they will be added as public requests are made to each member of the initial peer list.
 
-The private peerlist works more like a classic chat implementation where each peer is sort of a 'room' or 'channel' of their own. Private peers are not propagated to other peers, however a peer can broadcast to their own private peerlist.
+The private peerlist works more like a classic chat implementation where each peer is sort of a 'room' or 'channel' of their own. Private peers are not propagated to other peers, however a peer can broadcast messages to their own private peerlist.
 
 Whispering (private messages) is also supported to peers connected on both private and public peerlists.
 
