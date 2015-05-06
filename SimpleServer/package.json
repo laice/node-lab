@@ -1,0 +1,7 @@
+{
+  "name": "SimpleServer",
+  "version": "0.0.1",
+  "dependencies": {
+    "connect": "^3.3.5"
+  }
+}
