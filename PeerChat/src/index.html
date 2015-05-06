@@ -35,6 +35,10 @@
         <textarea id="chat-output-text" readonly cols="64" style="resize: none;"></textarea>
         <select multiple id="peerlist-public" ></select>
         <select multiple id="peerlist-private"></select>
+        <span id="peerlist-controls">
+            <img src="x.png" id="peer-remove"><br>
+            <img src="twa.png" id="peer-type-transfer">
+        </span>
     </div>
     <div id="chat-input" class="ui-section">
 
@@ -137,31 +141,65 @@
     });
     $('#allow-public').click(function(){
         var name = $("#pending-public-peers option:selected").text();
-        PeerChat.log('Allowing public for ' + name);
-        PeerChat.public_hello(name);
+
+        if(name) {
+            PeerChat.log('Allowing public for ' + name);
+            PeerChat.public_hello(name);
+        } else {
+            $("#pending-public-peers option").map(function(){
+                PeerChat.public_hello($(this).text());
+            });
+        }
     });
 
     $('#allow-private').click(function(){
         var name = $("#pending-private-peers option:selected").text();
-        PeerChat.log('Allowing private for ' + name);
-        PeerChat.private_hello(name);
+
+        if(name) {
+            PeerChat.log('Allowing private for ' + name);
+            PeerChat.private_hello(name);
+        } else {
+            $("#pending-private-peers option").map(function(){
+                PeerChat.private_hello($(this).text());
+            });
+        }
     });
 
     $('#pending-deny-public').click(function(){
         var name = $('#pending-public-peers option:selected').text();
-        for(var i = PeerChat.pending_public_peers.length; i >= 0; i--){
-            if(PeerChat.pending_public_peers[i].name === name){
-                PeerChat.pending_public_peers.splice(i, 1);
+        if(name) {
+            for (var i = PeerChat.pending_public_peers.length; i >= 0; i--) {
+                if (PeerChat.pending_public_peers[i].name === name) {
+                    PeerChat.pending_public_peers.splice(i, 1);
+                }
             }
+        } else {
+            $('#pending-public-peers option').map(function(){
+                for (var i = PeerChat.pending_public_peers.length; i >= 0; i--) {
+                    if (PeerChat.pending_public_peers[i].name === name) {
+                        PeerChat.pending_public_peers.splice(i, 1);
+                    }
+                }
+            });
         }
     });
 
     $('#pending-deny-private').click(function(){
         var name = $('#pending-private-peers option:selected').text();
-        for(var i = PeerChat.pending_private_peers.length; i >= 0; i--){
-            if(PeerChat.pending_private_peers[i].name === name){
-                PeerChat.pending_private_peers.splice(i, 1);
+        if(name) {
+            for (var i = PeerChat.pending_private_peers.length; i >= 0; i--) {
+                if (PeerChat.pending_private_peers[i].name === name) {
+                    PeerChat.pending_private_peers.splice(i, 1);
+                }
             }
+        } else {
+            $('#pending-private-peers option').map(function(){
+                for (var i = PeerChat.pending_private_peers.length; i >= 0; i--) {
+                    if (PeerChat.pending_private_peers[i].name === name) {
+                        PeerChat.pending_private_peers.splice(i, 1);
+                    }
+                }
+            });
         }
     });
 
@@ -174,6 +212,52 @@
         $('#peerlist-private').change(function(){
             $('#peerlist-public').find("option").attr("selected", false);
         });
+    });
+
+    $('#peer-remove').click(function(){
+
+        console.log('peerlist remove clicked');
+        $('#peerlist-public option').filter(":selected").map(function(){
+            console.log($(this).text());
+            for (var i = PeerChat.public_peers.length-1; i >= 0; i--){
+                if(PeerChat.public_peers[i].name === $(this).text()){
+                    PeerChat.public_peers[i].conn.send({type:"remove_peer"});
+                    PeerChat.public_peers.splice(i, 1);
+                }
+            }
+        });
+
+        $('#peerlist-private option').filter(":selected").map(function(){
+            for (var i = PeerChat.private_peers.length-1; i >= 0; i--){
+                if(PeerChat.private_peers[i].name === $(this).text()){
+                    PeerChat.private_peers[i].conn.send({type:"remove_peer"});
+                    PeerChat.private_peers.splice(i, 1);
+                }
+            }
+        });
+
+        PeerChat.make_peerlist();
+    });
+
+    $('#peer-type-transfer').click(function(){
+        $('#peerlist-public option').filter(":selected").map(function(){
+            for(var i = PeerChat.public_peers.length-1; i >= 0; i--){
+                if(PeerChat.public_peers[i].name === $(this).text()){
+                    PeerChat.private_peers.push(PeerChat.public_peers[i]);
+                    PeerChat.public_peers.splice(i, 1);
+                }
+            }
+        });
+
+        $('#peerlist-private option').filter(":selected").map(function(){
+            for(var i = PeerChat.private_peers.length-1; i >= 0; i--){
+                if(PeerChat.private_peers[i].name === $(this).text()){
+                    PeerChat.public_peers.push(PeerChat.private_peers[i]);
+                    PeerChat.private_peers.splice(i, 1);
+                }
+            }
+        });
+        PeerChat.make_peerlist();
     });
 
     $('#chat-input-text').keypress(function(event){
@@ -215,5 +299,8 @@
             $('#chat-input-text').val("");
         }
     });
+
+
+
 </script>
 </html>

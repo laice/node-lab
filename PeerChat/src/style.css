@@ -49,9 +49,11 @@
     color: #f5f5f5;
 }
 
-#peerlist-public, #peerlist-private {
+#peerlist-public, #peerlist-private,
+#pending-public-peers, #pending-private-peers {
     height: 120px;
     color: #f5f5f5;
+    width: 100px;
 }
 
 #peerlist-public, #pending-public-peers {
@@ -83,8 +85,13 @@
     background: #328183;
 }
 
-select {
-    width: 100px;
+#peerlist-controls {
+    display: inline-block;
+    vertical-align: top;
+}
+
+#peer-remove {
+    padding-left: 3px;
 }
 
 .ui-section {

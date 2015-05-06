@@ -13,7 +13,11 @@ var files = {
     utils: fs.readFileSync('../../common/src/ifp-utils/utils.js'),
     style: fs.readFileSync('style.css'),
     uikitjs: fs.readFileSync('../../common/lib/uikit/js/uikit.js'),
-    uikitcss: fs.readFileSync('../../common/lib/uikit/css/uikit.almost-flat.css')
+    uikitcss: fs.readFileSync('../../common/lib/uikit/css/uikit.almost-flat.css'),
+    assets: {
+        twa: fs.readFileSync('../../common/assets/icons/two-way-arrows.png'),
+        x: fs.readFileSync('../../common/assets/icons/x.png')
+    }
 };
 
 app.use('/app.js', function(req, res){
@@ -40,6 +44,16 @@ app.use('/uikit.css', function(req, res){
     res.setHeader("Content-Type", "text/css");
     res.end(files.uikitcss);
 });
+
+app.use('/x.png', function(req, res){
+    res.setHeader("Content-Type", "image/png");
+    res.end(files.assets.x);
+});
+
+app.use('/twa.png', function(req, res){
+    res.setHeader("Content-Type", "image/png");
+    res.end(files.assets.twa);
+})
 
 app.use('/', function(req, res){
     res.setHeader("Content-Type", "text/html");

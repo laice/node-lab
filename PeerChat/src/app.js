@@ -69,7 +69,7 @@ PeerChat.handle_data_peer = function(peer, data){
                 }
             }
             PeerChat.public_peers.push(peer);
-            PeerChat.remove_pending_peer(peer);
+            PeerChat.remove_pending_peer(peer, null, true);
             PeerChat.make_peerlist();
             peer.conn.send({type: "peer_confirmed", share: true});
             break;
@@ -77,7 +77,7 @@ PeerChat.handle_data_peer = function(peer, data){
             console.log('private hello received');
             peer.name = data.data;
             PeerChat.private_peers.push(peer);
-            PeerChat.remove_pending_peer(peer);
+            PeerChat.remove_pending_peer(peer, null, false);
             PeerChat.make_peerlist();
             peer.conn.send({type: "peer_confirmed", share: false});
             break;
@@ -103,6 +103,9 @@ PeerChat.handle_data_peer = function(peer, data){
                     data: PeerChat.public_peers
                 });
             }
+            break;
+        case "remove_peer":
+            PeerChat.remove_peer_by_id(peer.conn.peer);
             break;
 
 
@@ -132,6 +135,9 @@ PeerChat.handle_data_conn = function(conn, data){
         case "peer_confirmed":
             PeerChat.log('peer confirmed, removing from peerlist');
             PeerChat.remove_pending_peer(null, conn, data.share);
+            break;
+        case "remove_peer":
+            PeerChat.remove_peer_by_id(conn.peer);
             break;
     }
 
