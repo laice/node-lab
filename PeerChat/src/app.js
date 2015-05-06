@@ -23,7 +23,7 @@ PeerChat.init = function(username){
     this.public_peers = [];
     this.pending_public_peers = [];
     this.pending_private_peers = [];
-    this.peer = new Peer({key: "tfqi5mkneo9cz0k9"});
+    this.peer = new Peer({key: "<peerjs api key>"});
 
     this.peer.on('open', function(id){
         console.log('connection open, i am ' + id);
