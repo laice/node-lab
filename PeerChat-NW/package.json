@@ -1,0 +1,10 @@
+{
+  "name": "PeerChat",
+  "version": "0.0.1",
+  "main": "src/index.html",
+  "single-instance": false,
+  "window": {
+    "width": 800,
+    "height": 600
+  }
+}
