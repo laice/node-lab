@@ -19,3 +19,5 @@ Whispering (private messages) is also supported to peers connected on both priva
 Those familiar with p2p will know, after the initial connection is made through the signalling server, all network traffic occurs between peers, putting the bulk network load on peers communicating rather than the server itself.
 
 PeerJS uses WebRTC, which among other features has encryption built in - so any messages sent between peers are encrypted by default. It is still possible for an observer to trace the connection from peer-to-peer, and discover a connection has been made, but the details of the communication itself should remain secure. NOTE: Do not use this if you're using TOR (you should have scripts turned off anyway!) as it will make a direct connection to other peers and will reveal your connection.
+
+The source for the node.js version of PeerChat is in the PeerChat folder, the source for the nwjs version is in PeerChat-NW and a standalone nwjs executable is available in the dist folder. You will need to supply your own PeerJS api keys for the source versions.
