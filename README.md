@@ -2,6 +2,8 @@
 
 This is a collection of projects and experiments with nodejs, nwjs, and related js modules.
 
+Feel free to contact me about any of these projects.
+
 ### SimpleServer ###
 This is just a basic server I use for serving apps locally during development. It uses connect and static routing to keep things tight.
 
