@@ -7,6 +7,8 @@ Feel free to contact me about any of these projects.
 ### SimpleServer ###
 This is just a basic server I use for serving apps locally during development. It uses connect and static routing to keep things tight.
 
+This is mostly included for my on convenience. If you want to use it to test projects here, it's important to note the server's working directory must be set to the index.html of the app being run. So, for example with PeerChat, you'd want to set the working directory to "path/to/node-lab/PeerChat/src", but you actually run the server as "node path/to/node-lab/SimpleServer/src/app-peerchat.js"
+
 ### PeerChat ###
 This is a proof-of-concept PeerJS based chat client which embraces p2p technology. Each peer maintains private and public peerlists. When a peer joins another peer, and they both accept public transaction, peerlists are exchanged, and the public peerlist of each peer is expanded to include each other's peers, minus duplicates - if each peer on the added lists accept the public request. This creates a chain of public joining which, when accepted by all parties, allows the entire peer network to propagate back to the initial joiner. Either the initial peer will provide all other peer references, or recursively they will be added as public requests are made to each member of the initial peer list.
 
