@@ -11,7 +11,9 @@ var files = {
     index: fs.readFileSync('index.html'),
     app: fs.readFileSync('app.js'),
     utils: fs.readFileSync('../../common/src/ifp-utils/utils.js'),
-    style: fs.readFileSync('style.css')
+    style: fs.readFileSync('style.css'),
+    uikitjs: fs.readFileSync('../../common/lib/uikit/js/uikit.js'),
+    uikitcss: fs.readFileSync('../../common/lib/uikit/css/uikit.almost-flat.css')
 };
 
 app.use('/app.js', function(req, res){
@@ -27,6 +29,16 @@ app.use('/utils.js', function(req, res){
 app.use('/style.css', function(req, res){
     res.setHeader("Content-Type", "text/css");
     res.end(files.style);
+});
+
+app.use('/uikit.js', function(req, res){
+    res.setHeader("Content-Type", "application/javascript");
+    res.end(files.uikitjs);
+});
+
+app.use('/uikit.css', function(req, res){
+    res.setHeader("Content-Type", "text/css");
+    res.end(files.uikitcss);
 });
 
 app.use('/', function(req, res){

@@ -3,141 +3,217 @@
 <head lang="en">
     <meta charset="UTF-8">
     <title id="page_title">PeerChat</title>
+
     <link href="style.css" rel="stylesheet" type="text/css">
     <script src="http://cdn.peerjs.com/0.3.9/peer.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+
     <!-- nwjs
     <script src="../../common/src/ifp-utils/utils.js" type="application/javascript"></script>
-    <script src="app.js" type="application/javascript"></script>
+    <script src="../../common/lib/uikit/js/uikit.js" type="application/javascript"></script>
+    <link href="../../common/lib/uikit/css/uikit.css" rel="stylesheet" type="text/css">
     -->
     <!-- node -->
+    <script src="uikit.js"></script>
     <script src="utils.js"></script>
+    <link href="uikit.css" rel="stylesheet" type="text/css">
+
     <script src="app.js"></script>
-
-
+    <link href="style.css" rel="stylesheet" type="text/css">
 </head>
 
-<div id="console">
-    <textarea readonly id="console_output" rows="6" cols="64" style="resize: none"></textarea>
-</div>
-<div id="user-form">
 
-        <label for="userid">User Name (optional)</label>
+<div id="user-form" class="uk-form ui-section">
+
+        <label for="userid">User Name</label>
         <input type="text" id="userid" placeholder="Name" />
-        <button id="okuser">Ok</button>
+        <button id="okuser" class="button-blue">Ok</button>
 
 </div>
-<div id="join-form" hidden>
-
-    <label for="join-form-input">Host ID: </label>
-    <input type="text" id="join-form-input" />
-    <lable for="join-privacy-input">Share host peerlist? </lable>
-    <input type="checkbox" checked value="privacy" id="join-privacy-input">
-    <button id="join-form-button">Connect</button>
-
-</div>
-<div id="my-info" hidden>
-    <label for="peerid">Share this to allow people to connect to you: </label>
-    <div id="peerid"></div></div>
-<div id="chat" hidden>
-    <div id="chat-output">
-        <textarea id="chat-output-text" readonly rows="6" cols="64" style="resize: none;"></textarea>
-        <label for="chat-output-text">
-            <select id="peerlist_public" size="6"></select>
-            <select id="peerlist_private" size="6"></select>
-        </label>
+<div id="chat" hidden class="uk-form ui-section">
+    <div id="chat-output" class="ui-section">
+        <textarea id="chat-output-text" readonly cols="64" style="resize: none;"></textarea>
+        <select multiple id="peerlist-public" ></select>
+        <select multiple id="peerlist-private"></select>
     </div>
-    <div id="chat-input">
+    <div id="chat-input" class="ui-section">
 
         <input type="text" id="chat-input-text">
-        <label for="chat-input-text">
+        <!--<label for="chat-input-text" class="ui-section"> -->
             <select id="send-chat-dest">
                 <option>All</option>
-                <option>Public</option>
-                <option>Private</option>
+                <option>Broadcast Public</option>
+                <option>Broadcast Private</option>
                 <option>Whisper</option>
             </select>
-            <button id="send-chat">Send</button>
+            <button id="send-chat" class="button-blue">Send</button>
+            <span id="peerlist-buttons">
+                <button id="peerlist-deselect-all" class="button-blue">Deselect All</button>
+            </span>
 
-        </label>
+        <!--</label>-->
+
+        <span id="options-menu"><button id="options-menu-button" class="button-blue">Options</button></span>
 
     </div>
 </div>
-<div id="pending_peers_div" hidden>
-    <select id="pending_peers" size="6"></select>
-    <button id="allow-public">Allow Public</button>
-    <button id="allow-private">Allow Private</button>
-    <button id="pending-deny">Deny</button>
+<div id="chat-functions" hidden class="ui-section">
+    <div id="my-info"  class="uk-form ui-section">
+        <label for="peerid">Your Host ID: </label>
+        <div id="peerid"></div>
+    </div>
+    <div id="join-form" class="uk-form ui-section">
 
+        <label for="join-form-input">New Peer Host ID: </label>
+        <input type="text" id="join-form-input" />
+        <label for="join-privacy-input">Request Public? </label>
+        <input type="checkbox" checked value="privacy" id="join-privacy-input">
+        <button id="join-form-button" class="button-blue">Connect</button>
+
+    </div>
+    <div id="pending-peers-wrapper" class="ui-section">Pending Peers
+        <div id="pending-peers-div"  class="uk-form ui-section">
+            <select id="pending-public-peers" size="6"></select>
+            <button id="allow-public" class="button-green">Allow Public</button>
+            <button id="pending-deny-public" class="button-green">Deny</button>
+            <select id="pending-private-peers" size="6"></select>
+            <button id="allow-private" class="button-green">Allow Private</button>
+            <button id="pending-deny-private" class="button-green">Deny</button>
+        </div>
+    </div>
+    <div id="console" class="uk-placeholder ui-section">
+        <textarea readonly id="console_output" rows="6" style="resize: none"></textarea>
+    </div>
 </div>
+
 
 
 </body>
 <script>
 
+    $('#userid').keypress(function(event){
+        if(event.which === 13){
+            $('#okuser').click();
+        }
+    });
+
+    $('#options-menu-button').click(function(){
+        $('#chat-functions').toggle();
+    });
+
     $('#okuser').click(function(){
         var regex = /([a-zA-Z0-9]+)/g;
         var results = $('#userid').val().trim().match(regex);
-        if(results[0] !== '' ) {
+        if(results) {
             console.log('valid username: ' + results[0]);
             PeerChat.init(results[0]);
             $('#user-form').hide();
             $('#chat').show();
-            $('#my-info').show();
-            $('#join-form').show();
-            $('#pending-peers-div').show();
         } else {
             console.log('invalid username: ' + results);
         }
 
     });
-
+    $('#join-form-input').keypress(function(event){
+        if(event.which === 13){
+            $('#join-form-button').click();
+        }
+    })
     $('#join-form-button').click(function(){
-        PeerChat.join($('#join-form-input').val().trim(), $('#join-privacy-input').is(':checked'));
-        $('#join-form-input').val("");
+        if($('#join-form-input').val()) {
+            PeerChat.join($('#join-form-input').val().trim(), $('#join-privacy-input').is(':checked'));
+            $('#join-form-input').val("");
+        }
     });
     //console.log(process.versions);
+    $('#allow-peer').click(function(){
+        var results = [];
+        var public_res = [];
+        var private_res = [];
+
+        $('#pending-public-peers option').filter(':selected').text();
+
+
+    });
     $('#allow-public').click(function(){
-        var name = $("#pending_peers option:selected").text();
+        var name = $("#pending-public-peers option:selected").text();
+        PeerChat.log('Allowing public for ' + name);
         PeerChat.public_hello(name);
     });
 
     $('#allow-private').click(function(){
-        var name = $("#pending_peers option:selected").text();
+        var name = $("#pending-private-peers option:selected").text();
+        PeerChat.log('Allowing private for ' + name);
         PeerChat.private_hello(name);
     });
 
-    $('#pending-deny').click(function(){
-        var name = $('#pending_peers option:selected').text();
-        for(var i = PeerChat.pending_peers.length; i >= 0; i--){
-            if(PeerChat.pending_peers[i].name === name){
-                PeerChat.pending_peers.splice(i, 1);
+    $('#pending-deny-public').click(function(){
+        var name = $('#pending-public-peers option:selected').text();
+        for(var i = PeerChat.pending_public_peers.length; i >= 0; i--){
+            if(PeerChat.pending_public_peers[i].name === name){
+                PeerChat.pending_public_peers.splice(i, 1);
             }
         }
+    });
 
+    $('#pending-deny-private').click(function(){
+        var name = $('#pending-private-peers option:selected').text();
+        for(var i = PeerChat.pending_private_peers.length; i >= 0; i--){
+            if(PeerChat.pending_private_peers[i].name === name){
+                PeerChat.pending_private_peers.splice(i, 1);
+            }
+        }
+    });
+
+
+    $('#peerlist-deselect-all').click(function(){
+        $('#peerlist-public').change(function(){
+            $('#peerlist-private').find("option").attr("selected", false);
+        });
+
+        $('#peerlist-private').change(function(){
+            $('#peerlist-public').find("option").attr("selected", false);
+        });
+    });
+
+    $('#chat-input-text').keypress(function(event){
+        if(event.which === 13){
+            $('#send-chat').click();
+        }
     });
 
     $('#send-chat').click(function(){
-        var chat_dest = $('#send-chat-dest option:selected').text();
+        if($('#chat-input-text').val()) {
+            var chat_dest = $('#send-chat-dest option:selected').text();
+            PeerChat.log('Sending message to channel ' + chat_dest);
 
-        switch(chat_dest){
-            case "All":
-                PeerChat.msg($('#chat-input-text').val());
-                break;
-            case "Public":
-                PeerChat.msg.broadcastPublic($('#chat-input-text').val());
-                break;
-            case "Private":
-                PeerChat.msg.broadcastPrivate($('#chat-input-text').val());
-                break;
-            case "Whisper":
-                PeerChat.msg.private($('#chat-input-text').val(), $('#peerlist option:selected').text());
-                break;
+            switch (chat_dest) {
+                case "All":
+                    PeerChat.msg($('#chat-input-text').val());
+                    break;
+                case "Broadcast Public":
+                    PeerChat.msg.broadcastPublic($('#chat-input-text').val());
+                    break;
+                case "Broadcast Private":
+                    PeerChat.msg.broadcastPrivate($('#chat-input-text').val());
+                    break;
+                case "Whisper":
+                    var recipients = [];
 
+                    $('#peerlist-public option').filter(":selected").map(function () {
+                        recipients.push(PeerChat.find($(this).text(), true));
+                    });
+
+                    $('#peerlist-private option').filter(":selected").map(function () {
+                        recipients.push(PeerChat.find($(this).text(), true));
+                    });
+                    console.log(recipients);
+                    PeerChat.msg.private($('#chat-input-text').val(), recipients);
+                    break;
+
+            }
+            $('#chat-input-text').val("");
         }
-        $('#chat-input-text').val("");
-
-
     });
 </script>
 </html>

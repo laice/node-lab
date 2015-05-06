@@ -12,7 +12,7 @@ window.PeerChat = window.PeerChat || {};
 
 var PeerChat = window.PeerChat;
 PeerChat.init = function(username){
-    this.name = username || "Nameless";
+
     this.auto_request_peerlist = true;
     this.logs = [];
     this.new_logs = [];
@@ -21,13 +21,16 @@ PeerChat.init = function(username){
     this.messages = [];
     this.private_peers = [];
     this.public_peers = [];
-    this.pending_peers = [];
+    this.pending_public_peers = [];
+    this.pending_private_peers = [];
     this.peer = new Peer({key: "tfqi5mkneo9cz0k9"});
 
     this.peer.on('open', function(id){
         console.log('connection open, i am ' + id);
         PeerChat.id = id;
         $('#peerid').empty().text(id);
+        PeerChat.name = (username || "Nameless")+"@"+PeerChat.id.substring(0, 5);
+        PeerChat.make_peerlist();
     });
 
     this.peer.on('connection', function(conn){
@@ -42,8 +45,6 @@ PeerChat.init = function(username){
         });
 
     });
-
-    PeerChat.make_peerlist();
 
     return this.peer;
 };
@@ -70,7 +71,7 @@ PeerChat.handle_data_peer = function(peer, data){
             PeerChat.public_peers.push(peer);
             PeerChat.remove_pending_peer(peer);
             PeerChat.make_peerlist();
-            peer.conn.send({type: "peer_confirmed"});
+            peer.conn.send({type: "peer_confirmed", share: true});
             break;
         case "private_hello":
             console.log('private hello received');
@@ -78,15 +79,19 @@ PeerChat.handle_data_peer = function(peer, data){
             PeerChat.private_peers.push(peer);
             PeerChat.remove_pending_peer(peer);
             PeerChat.make_peerlist();
-            peer.conn.send({type: "peer_confirmed"});
+            peer.conn.send({type: "peer_confirmed", share: false});
             break;
         case "msg":
             console.log('msg received');
             PeerChat.msg.display(data);
             break;
+        case "pmsg":
+            PeerChat.log('Private message received');
+            PeerChat.msg.display(data);
+            break;
         case "name_request":
             console.log('name request received', data);
-            peer.conn.send({type: "name_response", data: PeerChat.name});
+            peer.conn.send({type: "name_response", data: PeerChat.name, share: peer.share});
             break;
 
         case "request_peerlist":
@@ -120,9 +125,13 @@ PeerChat.handle_data_conn = function(conn, data){
             PeerChat.log('message received');
             PeerChat.msg.display(data);
             break;
+        case "pmsg":
+            PeerChat.log('Private message received');
+            PeerChat.msg.display(data);
+            break;
         case "peer_confirmed":
             PeerChat.log('peer confirmed, removing from peerlist');
-            PeerChat.remove_pending_peer(null, conn);
+            PeerChat.remove_pending_peer(null, conn, data.share);
             break;
     }
 
@@ -176,25 +185,54 @@ PeerChat.is_public = function(id){
 
 PeerChat.pending_peer = function(conn, data){
     console.log('adding pending peer');
-    $('#pending_peers').append("<option>" + data.data);
-    this.pending_peers.push({ conn: conn, name: data.data, id: conn.peer});
+    $('#pending-peers').append("<option>" + data.data);
+    switch(data.share){
+        case true:
+            this.pending_public_peers.push({ conn: conn, name: data.data, id: conn.peer, share: data.share});
+            break;
+        case false:
+            this.pending_private_peers.push({conn: conn, name: data.data, id: conn.peer, share: data.share});
+            break;
+        default:
+            PeerChat.error('Invalid peer share setting')
+            break;
+    }
+
     this.make_peerlist();
 };
 
-PeerChat.remove_pending_peer = function(peer, conn) {
+PeerChat.remove_pending_peer = function(peer, conn, share) {
     var id;
     if(peer){
         id = peer.id;
     } else if (conn) {
         id = conn.peer;
     }
-    PeerChat.log('removing id ' + id);
-    for(var i = this.pending_peers.length-1; i >= 0; i--){
-        if(id === this.pending_peers[i].id){
-            PeerChat.log('matching pending peer id found ' + this.pending_peers[i].id);
-            this.pending_peers.splice(i, 1);
-        }
+    PeerChat.log('removing id ' + id + ' share?: ' + share);
+    switch(share){
+        case true:
+            for (var i = this.pending_public_peers.length - 1; i >= 0; i--) {
+                if (id === this.pending_public_peers[i].id) {
+                    PeerChat.log('matching pending peer id found ' + this.pending_public_peers[i].id);
+                    this.pending_public_peers.splice(i, 1);
+                }
+            }
+            break;
+        case false:
+            for (var i = this.pending_private_peers.length - 1; i >= 0; i--) {
+                if (id === this.pending_private_peers[i].id) {
+                    PeerChat.log('matching pending peer id found ' + this.pending_private_peers[i].id);
+                    this.pending_private_peers.splice(i, 1);
+                }
+            }
+            break;
+        default:
+            PeerChat.error('Invalid share trying to remove pending peer ' + id);
+            break;
+
+
     }
+
 
     PeerChat.make_peerlist();
 };
@@ -209,9 +247,9 @@ PeerChat.public_peer_ids = function(){
 
 PeerChat.public_hello = function(name){
     var peer;
-    for(var i = 0, len = this.pending_peers.length; i < len; i++){
-        if(this.pending_peers[i].name === name){
-            peer = this.pending_peers[i]
+    for(var i = 0, len = this.pending_public_peers.length; i < len; i++){
+        if(this.pending_public_peers[i].name === name){
+            peer = this.pending_public_peers[i]
         }
     }
     if(peer) {
@@ -239,9 +277,9 @@ PeerChat.public_hello = function(name){
 
 PeerChat.private_hello = function(name){
     var peer;
-    for(var i = 0, len = this.pending_peers.length; i < len; i++){
-        if(this.pending_peers[i].name === name){
-            peer = this.pending_peers[i];
+    for(var i = 0, len = this.pending_private_peers.length; i < len; i++){
+        if(this.pending_private_peers[i].name === name){
+            peer = this.pending_private_peers[i];
         }
     }
     if(peer){
@@ -259,20 +297,45 @@ PeerChat.private_hello = function(name){
 
 };
 
+PeerChat.find = function(name, share){
+    switch(share){
+        case true:
+            for(var i = 0, len = this.public_peers.length; i < len; i++){
+                if(this.public_peers[i].name === name){
+                    return this.public_peers[i];
+                }
+            }
+            break;
+        case false:
+            for(var i = 0, len = this.private_peers.length; i < len; i++){
+                if(this.private_peers[i].name === name){
+                    return this.private_peers[i];
+                }
+            }
+            break;
+        default:
+            PeerChat.error('Invalid share in PeerChat.find');
+    }
+};
+
 PeerChat.make_peerlist = function(){
     PeerChat.log('making peerlist');
-    $('#peerlist_public').empty();
-    $('#peerlist_public').append("<option id='self'>"+PeerChat.name+"</option>");
+    $('#peerlist-public').empty();
+    $('#peerlist-public').append("<option id='self'>"+PeerChat.name+"</option>");
     for(var i = 0, len = this.public_peers.length; i < len; i++){
-        $('#peerlist_public').append("<option id='public_peer'>"+this.public_peers[i].name + "</option>");
+        $('#peerlist-public').append("<option id='public-peer'>"+this.public_peers[i].name + "</option>");
     }
-    $('#peerlist_private').empty();
+    $('#peerlist-private').empty();
     for(var i = 0, len = this.private_peers.length; i < len; i++){
-        $('#peerlist_private').append("<option id='private_peer'>" + this.private_peers[i].name + "</option>");
+        $('#peerlist-private').append("<option id='private-peer'>" + this.private_peers[i].name + "</option>");
     }
-    $('#pending_peers').empty();
-    for(var i = 0, len = this.pending_peers.length; i < len; i++){
-        $('#pending_peers').append("<option id='pending_peer'>" + this.pending_peers[i].name + "</option>");
+    $('#pending-public-peers').empty();
+    for(var i = 0, len = this.pending_public_peers.length; i < len; i++){
+        $('#pending-public-peers').append("<option id='pending-public-peer'>" + this.pending_public_peers[i].name + "</option>");
+    }
+    $('#pending-private-peers').empty();
+    for(var i = 0, len = this.pending_private_peers.length; i < len; i++){
+        $('#pending-private-peers').append("<option id='pending-private-peer'>" + this.pending_private_peers[i].name + "</option>");
     }
 };
 
@@ -334,12 +397,18 @@ PeerChat.msg = function(msg){
     PeerChat.msg.display({data: msg, from: PeerChat.name});
 };
 
-PeerChat.msg.private = function(msg, target) {
-    target.send({
-        type: "pmsg",
-        data: msg,
-        from: PeerChat.name
-    });
+PeerChat.msg.private = function(msg, targets) {
+    console.log(targets);
+    for(var i = 0; i < targets.length; i++) {
+        if(targets[i]) {
+            console.log(targets[i]);
+            targets[i].conn.send({
+                type: "pmsg",
+                data: msg,
+                from: PeerChat.name + " whispers"
+            });
+        }
+    }
     PeerChat.msg.display({data: msg, from: PeerChat.name});
 };
 

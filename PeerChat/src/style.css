@@ -1,13 +1,140 @@
-#pending_peers_div {
-    display:inline-block;
-    vertical-align:middle;
+
+
+
+#console {
+    border: 0px;
+    background: #5e8340;
+
 }
 
 #console_output {
     border: 0px;
-    background: darkgoldenrod;
+    background: #5e8340;
+    color: #f5f5f5;
+    width: 100%;
 }
 
 #chat {
+    border: 0px;
+    background: #5e8340;
+    width: 768px;
+}
 
+
+#chat-output-text {
+    height:120px;
+    display: inline-block;
+    background: #328183;
+    color: #f5f5f5;
+}
+
+#chat-input-text, #send-chat-dest,
+#join-form-input, #userid
+{
+    background: #328183;
+    color: #f5f5f5;
+
+}
+
+::-webkit-input-placeholder {
+    color: #f5f5f5;
+}
+
+::-moz-placeholder {
+    color: #f5f5f5;
+    opacity: 1;
+}
+
+:-ms-input-placeholder {
+    color: #f5f5f5;
+}
+
+#peerlist-public, #peerlist-private {
+    height: 120px;
+    color: #f5f5f5;
+}
+
+#peerlist-public, #pending-public-peers {
+    background: #5e8340;
+}
+
+#peerlist-private, #pending-private-peers {
+    background: #328183;
+}
+
+#options-menu {
+    text-align:right;
+    float: right;
+}
+
+#chat-functions, #user-form  {
+    border: 0px;
+    background: #5e8340;
+    width: 768px;
+    color: #f5f5f5;
+}
+
+#my-info {
+    background: #328183;
+    color: #f5f5f5;
+}
+
+#pending-peers-wrapper {
+    background: #328183;
+}
+
+select {
+    width: 100px;
+}
+
+.ui-section {
+    padding: 5px;
+    border-radius: 6px;
+
+}
+
+.button-green {
+    background-color:#5e8340;
+    -moz-border-radius:6px;
+    -webkit-border-radius:6px;
+    border-radius:6px;
+    border:1px solid #f5f5f5;
+    display:inline-block;
+    cursor:pointer;
+    color:#f5f5f5;
+    font-family:Arial;
+    font-size:15px;
+    font-weight:bold;
+    padding:6px 24px;
+    text-decoration:none;
+}
+.button-green:hover {
+    background-color:#328283;
+}
+.button-green:active {
+    position:relative;
+    top:1px;
+}
+
+.button-blue {
+    background-color:#328283;
+    -moz-border-radius:6px;
+    -webkit-border-radius:6px;
+    border-radius:6px;
+    border:1px solid #f5f5f5;
+    display:inline-block;
+    cursor:pointer;
+    color:#f5f5f5;
+    font-family:Arial;
+    font-size:15px;
+    font-weight:bold;
+    padding:6px 24px;
+    text-decoration:none;
+}
+.button-blue:hover {
+    background-color:#5e8340;
+}
+.button-blue:active {
+    position:relative;
+    top:1px;
 }
