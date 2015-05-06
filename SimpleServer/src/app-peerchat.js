@@ -16,7 +16,12 @@ var files = {
     uikitcss: fs.readFileSync('../../common/lib/uikit/css/uikit.almost-flat.css'),
     assets: {
         twa: fs.readFileSync('../../common/assets/icons/two-way-arrows.png'),
-        x: fs.readFileSync('../../common/assets/icons/x.png')
+        x: fs.readFileSync('../../common/assets/icons/x.png'),
+        minus: fs.readFileSync('../../common/assets/icons/minus.png'),
+        twa_blue: fs.readFileSync('../../common/assets/icons/two-way-arrows-blue.png'),
+        x_blue: fs.readFileSync('../../common/assets/icons/x-blue.png'),
+        minus_blue: fs.readFileSync('../../common/assets/icons/minus-blue.png')
+
     }
 };
 
@@ -53,7 +58,28 @@ app.use('/x.png', function(req, res){
 app.use('/twa.png', function(req, res){
     res.setHeader("Content-Type", "image/png");
     res.end(files.assets.twa);
-})
+});
+
+app.use('/minus.png', function(req, res){
+    res.setHeader("Content-Type", "image/png");
+    res.end(files.assets.minus);
+});
+
+app.use('/x-blue.png', function(req, res){
+    res.setHeader("Content-Type", "image/png");
+    res.end(files.assets.x_blue);
+});
+
+app.use('/twa-blue.png', function(req, res){
+    res.setHeader("Content-Type", "image/png");
+    res.end(files.assets.twa_blue);
+});
+
+app.use('/minus-blue.png', function(req, res){
+    res.setHeader("Content-Type", "image/png");
+    res.end(files.assets.minus_blue);
+});
+
 
 app.use('/', function(req, res){
     res.setHeader("Content-Type", "text/html");

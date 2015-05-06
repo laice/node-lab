@@ -88,9 +88,14 @@
 #peerlist-controls {
     display: inline-block;
     vertical-align: top;
+    padding-left: 2px;
 }
 
 #peer-remove {
+    padding-left: 3px;
+}
+
+#peer-deselect-all {
     padding-left: 3px;
 }
 

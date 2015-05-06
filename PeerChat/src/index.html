@@ -36,29 +36,26 @@
         <select multiple id="peerlist-public" ></select>
         <select multiple id="peerlist-private"></select>
         <span id="peerlist-controls">
-            <img src="x.png" id="peer-remove"><br>
-            <img src="twa.png" id="peer-type-transfer">
+            <img src="x.png" id="peer-remove" onmouseover="this.src='x-blue.png'"
+                 onmouseout="this.src='x.png'"><br>
+            <img src="twa.png" id="peer-type-transfer" onmouseover="this.src='twa-blue.png'"
+                 onmouseout="this.src='twa.png'"><br>
+            <img src="minus.png" id="peerlist-deselect-all" onmouseover="this.src='minus-blue.png'"
+                onmouseout="this.src='minus.png'">
         </span>
     </div>
     <div id="chat-input" class="ui-section">
 
         <input type="text" id="chat-input-text">
-        <!--<label for="chat-input-text" class="ui-section"> -->
-            <select id="send-chat-dest">
-                <option>All</option>
-                <option>Broadcast Public</option>
-                <option>Broadcast Private</option>
-                <option>Whisper</option>
-            </select>
-            <button id="send-chat" class="button-blue">Send</button>
-            <span id="peerlist-buttons">
-                <button id="peerlist-deselect-all" class="button-blue">Deselect All</button>
-            </span>
 
-        <!--</label>-->
-
+        <select id="send-chat-dest">
+            <option>All</option>
+            <option>Broadcast Public</option>
+            <option>Broadcast Private</option>
+            <option>Whisper</option>
+        </select>
+        <button id="send-chat" class="button-blue">Send</button>
         <span id="options-menu"><button id="options-menu-button" class="button-blue">Options</button></span>
-
     </div>
 </div>
 <div id="chat-functions" hidden class="ui-section">
@@ -205,13 +202,7 @@
 
 
     $('#peerlist-deselect-all').click(function(){
-        $('#peerlist-public').change(function(){
-            $('#peerlist-private').find("option").attr("selected", false);
-        });
-
-        $('#peerlist-private').change(function(){
-            $('#peerlist-public').find("option").attr("selected", false);
-        });
+        $('option:selected').removeAttr("selected");
     });
 
     $('#peer-remove').click(function(){
